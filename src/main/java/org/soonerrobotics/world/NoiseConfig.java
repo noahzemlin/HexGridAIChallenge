@@ -22,8 +22,8 @@ public class NoiseConfig {
         double x2 = this.xScale;
         double y2 = this.yScale;
 
-        double s= (double) x / (width * sqrt(3));
-        double t= (double) y / (height * 1.5);
+        double s= (double) x / ceil(width * sqrt(3));
+        double t= (double) y / ceil(height * 1.5);
         double dx=x2-x1;
         double dy=y2-y1;
 

@@ -22,6 +22,7 @@ public class MapEditor {
     static JFrame frame;
     static double heightScale = 3;
     static double tempScale = 3;
+    static int xOffset = 0;
     static boolean makeNewSeed = false;
     /**
      * Create the GUI and show it.  For thread safety,
@@ -86,6 +87,20 @@ public class MapEditor {
         });
         settingsPanel.add(seedButton);
 
+        JSlider xOffsetSlider = new JSlider(JSlider.HORIZONTAL,
+                0, 63, (int) (tempScale));
+        xOffsetSlider.addChangeListener(e -> {
+            xOffset = xOffsetSlider.getValue();
+            xOffsetSlider.setBorder(BorderFactory.createTitledBorder("X Offset " + xOffset));
+            frame.repaint();
+        });
+        xOffsetSlider.setBorder(BorderFactory.createTitledBorder("X Offset " + xOffset));
+        xOffsetSlider.setMajorTickSpacing(10);
+        xOffsetSlider.setMinorTickSpacing(1);
+        xOffsetSlider.setPaintTicks(false);
+        xOffsetSlider.setPaintLabels(false);
+        settingsPanel.add(xOffsetSlider);
+
         frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
         frame.setSize( (int)(1920), 1080);
         frame.setResizable(true);
@@ -141,7 +156,7 @@ public class MapEditor {
                 worldGenerator.regenSeed();
             }
 
-            world = worldGenerator.Generate(grid);
+            world = worldGenerator.Generate(grid, xOffset);
 
             for (Hexagon<SatelliteData> hexagon : grid.getHexagons()) {
                 Polygon polygon = new Polygon();

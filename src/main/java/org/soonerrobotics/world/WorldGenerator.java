@@ -6,6 +6,8 @@ import org.hexworks.mixite.core.api.contract.SatelliteData;
 
 import java.util.Random;
 
+import static java.lang.Math.sqrt;
+
 public class WorldGenerator {
 
     // World Parameters
@@ -47,12 +49,12 @@ public class WorldGenerator {
         this.heightNoise.yScale = yScale;
     }
 
-    public World Generate(HexagonalGrid<SatelliteData> grid) {
+    public World Generate(HexagonalGrid<SatelliteData> grid, int xOffset) {
         World world = new World((short) grid.getGridData().getGridWidth(), (short) grid.getGridData().getGridHeight());
 
         for (Hexagon<SatelliteData> hexagon : grid.getHexagons()) {
             // TODO: Replace with custom grid that has radius 1 to fix a bug with the window rescaling
-            int x = (int) (hexagon.getCenterX() / grid.getGridData().getRadius());
+            int x = (int) (hexagon.getCenterX() / grid.getGridData().getRadius() + xOffset * sqrt(3));
             int y = (int) (hexagon.getCenterY() / grid.getGridData().getRadius());
             int width = grid.getGridData().getGridWidth();
             int height = grid.getGridData().getGridHeight();
@@ -65,6 +67,10 @@ public class WorldGenerator {
         }
 
         return world;
+    }
+
+    public World Generate(HexagonalGrid<SatelliteData> grid) {
+        return Generate(grid, 0);
     }
 }
 
