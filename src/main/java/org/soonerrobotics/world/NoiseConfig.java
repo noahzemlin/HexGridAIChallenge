@@ -1,13 +1,12 @@
 package org.soonerrobotics.world;
 
-import static java.lang.Math.cos;
-import static java.lang.Math.sin;
+import static java.lang.Math.*;
 
 public class NoiseConfig {
     public int mean;
     public int range;
-    public float xScale;
-    public float yScale;
+    public double xScale;
+    public double yScale;
 
     public NoiseConfig() {
         this.mean = 0;
@@ -18,15 +17,15 @@ public class NoiseConfig {
     
     public float get(long seed, int x, int y, int width, int height) {
 
-        float x1 = -this.xScale;
-        float y1 = -this.yScale;
-        float x2 = this.xScale;
-        float y2 = this.yScale;
+        double x1 = 0;
+        double y1 = 0;
+        double x2 = this.xScale;
+        double y2 = this.yScale;
 
-        float s= (float) x / (width - 2);
-        float t= (float) y / (height - 2);
-        float dx=x2-x1;
-        float dy=y2-y1;
+        double s= (double) x / (width * sqrt(3));
+        double t= (double) y / (height * 1.5);
+        double dx=x2-x1;
+        double dy=y2-y1;
 
         double pi = 3.141593;
         double nx=x1+cos(s*2*pi)*dx/(2*pi);

@@ -9,28 +9,86 @@ import org.soonerrobotics.world.World;
 import org.soonerrobotics.world.WorldGenerator;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-import static java.lang.Math.sqrt;
+import static java.lang.Math.*;
 import static org.soonerrobotics.HexUtility.getPolygon;
 
 public class MapEditor {
+    static JFrame frame;
+    static double heightScale = 3;
+    static double tempScale = 3;
+    static boolean makeNewSeed = false;
     /**
      * Create the GUI and show it.  For thread safety,
      * this method should be invoked from the
      * event-dispatching thread.
      */
     private static void createAndShowGUI() {
-        JFrame frame = new JFrame("Nectar Nations");
+        frame = new JFrame("Nectar Nations");
 
         Container content = frame.getContentPane();
-        content.add(new DrawingPanel());
+        content.setLayout(new GridBagLayout());
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.gridx = 1;
+        c.gridy = 1;
+        c.fill = GridBagConstraints.BOTH;
+        c.weightx = 0.9;
+        c.weighty = 1.0;
+
+        JPanel settingsPanel = new JPanel();
+        settingsPanel.setLayout(new BoxLayout(settingsPanel, BoxLayout.Y_AXIS));
+
+        content.add(new DrawingPanel(), c);
+
+        c.weightx = 0.1;
+        c.gridx = 2;
+
+        content.add(settingsPanel, c);
+
+        JSlider heightSlider = new JSlider(JSlider.HORIZONTAL,
+                10, 60, (int) (heightScale * 10));
+        heightSlider.addChangeListener(e -> {
+            heightScale = heightSlider.getValue() / 10.0;
+            heightSlider.setBorder(BorderFactory.createTitledBorder("Height Noise Scale " + heightScale));
+            frame.repaint();
+        });
+        heightSlider.setBorder(BorderFactory.createTitledBorder("Height Noise Scale " + heightScale));
+        heightSlider.setMajorTickSpacing(10);
+        heightSlider.setMinorTickSpacing(1);
+        heightSlider.setPaintTicks(false);
+        heightSlider.setPaintLabels(false);
+        settingsPanel.add(heightSlider);
+
+        JSlider tempSlider = new JSlider(JSlider.HORIZONTAL,
+                10, 60, (int) (tempScale * 10));
+        tempSlider.addChangeListener(e -> {
+            tempScale = tempSlider.getValue() / 10.0;
+            tempSlider.setBorder(BorderFactory.createTitledBorder("Temp Noise Scale " + tempScale));
+            frame.repaint();
+        });
+        tempSlider.setBorder(BorderFactory.createTitledBorder("Temp Noise Scale " + tempScale));
+        tempSlider.setMajorTickSpacing(10);
+        tempSlider.setMinorTickSpacing(1);
+        tempSlider.setPaintTicks(false);
+        tempSlider.setPaintLabels(false);
+        settingsPanel.add(tempSlider);
+
+        JButton seedButton = new JButton("New Seed");
+        seedButton.addActionListener(e -> {
+            makeNewSeed = true;
+            frame.repaint();
+        });
+        settingsPanel.add(seedButton);
 
         frame.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
         frame.setSize( (int)(1920), 1080);
-        frame.setResizable(false);
+        frame.setResizable(true);
         frame.setLocationRelativeTo( null );
         frame.setVisible(true);
     }
@@ -40,36 +98,50 @@ public class MapEditor {
         //mouse variables here
         //Point mPt = new Point(0,0);
 
+        HexagonalGridBuilder<SatelliteData> builder;
         HexagonalGrid<SatelliteData> grid;
+        WorldGenerator worldGenerator;
         World world;
 
         public DrawingPanel()
         {
             setBackground(Color.WHITE);
-
-            HexagonalGridBuilder<SatelliteData> builder = new HexagonalGridBuilder<>()
-                    .setGridHeight(42)
+            builder = new HexagonalGridBuilder<>()
+                    .setGridHeight(40)
                     .setGridWidth(64)
                     .setGridLayout(HexagonalGridLayout.RECTANGULAR)
                     .setOrientation(HexagonOrientation.POINTY_TOP)
                     .setRadius(16.0);
             grid = builder.build();
 
-            WorldGenerator worldGenerator = new WorldGenerator();
+            worldGenerator = new WorldGenerator();
             worldGenerator.setTemperatureNoise(20, 10, 3, 3);
             worldGenerator.setHumidityNoise(40, 20, 8, 8);
             worldGenerator.setHeightNoise(0, 10, 3, 3);
-
-            world = worldGenerator.Generate(grid);
 
         }
 
         public void paintComponent(Graphics g)
         {
             Graphics2D g2 = (Graphics2D)g;
-            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
-            g.setFont(new Font("TimesRoman", Font.PLAIN, 20));
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g.setFont(new Font("TimesRoman", Font.BOLD, 16));
             super.paintComponent(g2);
+
+            double radius = (min((this.getHeight()-8) / (grid.getGridData().getGridHeight() * 1.5), (this.getWidth()-8) / (grid.getGridData().getGridWidth() * sqrt(3))));
+
+            builder.setRadius(radius);
+            grid = builder.build();
+
+            worldGenerator.setTemperatureNoise(20, 10, tempScale, tempScale);
+            worldGenerator.setHeightNoise(0, 10, heightScale, heightScale);
+
+            if (makeNewSeed) {
+                makeNewSeed = false;
+                worldGenerator.regenSeed();
+            }
+
+            world = worldGenerator.Generate(grid);
 
             for (Hexagon<SatelliteData> hexagon : grid.getHexagons()) {
                 Polygon polygon = new Polygon();
@@ -103,6 +175,7 @@ public class MapEditor {
                 g2.fillPolygon(polygon);
                 g2.setColor(Color.DARK_GRAY);
                 g2.drawPolygon(polygon);
+//                g2.drawString(hexagon.getGridX() + "," + hexagon.getGridY() + "," + hexagon.getGridZ(), (int) (hexagon.getCenterX() - 10), (int) (hexagon.getCenterY() + 6));
             }
         }
     } // end of DrawingPanel class
