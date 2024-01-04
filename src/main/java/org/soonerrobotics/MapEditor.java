@@ -14,6 +14,7 @@ import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Random;
 
 import static java.lang.Math.*;
 import static org.soonerrobotics.HexUtility.getPolygon;
@@ -23,7 +24,7 @@ public class MapEditor {
     static double heightScale = 3;
     static double tempScale = 3;
     static int xOffset = 0;
-    static boolean makeNewSeed = false;
+    static long seed = 0;
     /**
      * Create the GUI and show it.  For thread safety,
      * this method should be invoked from the
@@ -80,12 +81,27 @@ public class MapEditor {
         tempSlider.setPaintLabels(false);
         settingsPanel.add(tempSlider);
 
-        JButton seedButton = new JButton("New Seed");
-        seedButton.addActionListener(e -> {
-            makeNewSeed = true;
+        JPanel seedPanel = new JPanel();
+        seedPanel.setLayout(new FlowLayout());
+
+        JTextField seedText = new JTextField();
+        seedText.setColumns(20);
+        seedText.setText(String.valueOf(seed));
+        seedText.addActionListener(e -> {
+            seed = Long.parseUnsignedLong(seedText.getText());
             frame.repaint();
         });
-        settingsPanel.add(seedButton);
+
+        JButton seedButton = new JButton("New Seed");
+        seedButton.addActionListener(e -> {
+            seed = new Random().nextLong();
+            seedText.setText(Long.toUnsignedString(seed));
+            frame.repaint();
+        });
+
+        seedPanel.add(seedButton);
+        seedPanel.add(seedText);
+        settingsPanel.add(seedPanel);
 
         JSlider xOffsetSlider = new JSlider(JSlider.HORIZONTAL,
                 0, 63, (int) (tempScale));
@@ -151,10 +167,7 @@ public class MapEditor {
             worldGenerator.setTemperatureNoise(20, 10, tempScale, tempScale);
             worldGenerator.setHeightNoise(0, 10, heightScale, heightScale);
 
-            if (makeNewSeed) {
-                makeNewSeed = false;
-                worldGenerator.regenSeed();
-            }
+            worldGenerator.setSeed(seed);
 
             world = worldGenerator.Generate(grid, xOffset);
 

@@ -72,5 +72,9 @@ public class WorldGenerator {
     public World Generate(HexagonalGrid<SatelliteData> grid) {
         return Generate(grid, 0);
     }
+
+    public void setSeed(long seed) {
+        this.seed = seed;
+    }
 }
 
